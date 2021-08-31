@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Any
+
+import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
@@ -15,6 +17,9 @@ class BaseTrainingManager(ABC):
     @abstractmethod
     def predict(self, df: DataFrame) -> pd.Series:
         raise NotImplementedError
+
+    def save(self, path: str):
+        joblib.dump(self, path)
 
 
 class LightGBMTrainingManager(BaseTrainingManager):
@@ -77,7 +82,7 @@ class LightGBMTrainingManager(BaseTrainingManager):
     def predict(self, df: DataFrame) -> np.ndarray:
         return self.model.predict(df)
 
-    def _confirm_valid_feature_name(self, feature_name: List[str]):
+    def _confirm_valid_feature_name(self, feature_name: Any):
         if feature_name is None:
             raise KeyError(
                 f"`feature_name` must be a list of strings containing feature names to use during training. \
