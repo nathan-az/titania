@@ -18,9 +18,6 @@ class BaseTrainingManager(ABC):
     def predict(self, df: DataFrame) -> pd.Series:
         raise NotImplementedError
 
-    def get_training_rows(self, df: DataFrame, dataset_type_col: str):
-        return df.loc[df[dataset_type_col] == "training", :]
-
     def save(self, path: str):
         joblib.dump(self, path)
 
@@ -122,10 +119,7 @@ class SubsampledClassifier(BaseTrainingManager):
     def _get_sampled_alpha(
         self, df: DataFrame, dataset_type_col: str, label_col: str
     ) -> float:
-        training_labels = super().get_training_rows(
-            df=df,
-            dataset_type_col=dataset_type_col,
-        )[label_col]
+        training_labels = df[df[dataset_type_col] == "training"][label_col]
         sampled_alpha = len(training_labels[training_labels == 1]) / len(
             training_labels
         )
