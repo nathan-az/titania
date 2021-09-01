@@ -96,6 +96,10 @@ class LightGBMTrainingManager(BaseTrainingManager):
 
 
 class SubsampledClassifier(BaseTrainingManager):
+    base_classifier: BaseTrainingManager
+    original_alpha: float
+    subsampled_alpha: float
+
     def __init__(
         self, base_classifier_class, original_alpha: float, **base_classifier_kwargs
     ):
@@ -127,6 +131,8 @@ class SubsampledClassifier(BaseTrainingManager):
 
     @staticmethod
     def _calculate_beta(alpha_old, alpha_new):
+        # This follows from the fact that the beta (probability of selecting a negative instance while
+        # undersampling) is calculated through (num_pos / (desired pos/neg ratio)) / num_neg
         return (alpha_old / (1 - alpha_old)) / (alpha_new / (1 - alpha_new))
 
     @staticmethod
