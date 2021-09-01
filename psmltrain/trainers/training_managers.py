@@ -6,7 +6,7 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from lightgbm import Booster
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 
 class BaseTrainingManager(ABC):
@@ -17,6 +17,9 @@ class BaseTrainingManager(ABC):
     @abstractmethod
     def predict(self, df: DataFrame) -> pd.Series:
         raise NotImplementedError
+
+    def get_training_rows(self, df: DataFrame, dataset_type_col: str):
+        return df.loc[df[dataset_type_col] == "training", :]
 
     def save(self, path: str):
         joblib.dump(self, path)
@@ -93,3 +96,35 @@ class LightGBMTrainingManager(BaseTrainingManager):
                 f"`feature_name` must be a list of strings containing feature names to use during training. \
                 Got `{type(feature_name)}`. Note: `auto` is not supported"
             )
+
+
+class SubsampledClassifier(BaseTrainingManager):
+    def __init__(
+        self, base_classifier_class, original_alpha: float, **base_classifier_kwargs
+    ):
+        self.base_classifier = base_classifier_class(**base_classifier_kwargs)
+        self.original_alpha = original_alpha
+
+    def train(self, df: DataFrame, dataset_type_col: str, label_col: str, **kwargs):
+        self.sampled_alpha = self._get_sampled_alpha(
+            df=df, dataset_type_col=dataset_type_col, label_col=label_col
+        )
+        self.base_classifier.train(df, label_col, dataset_type_col, **kwargs)
+        return self
+
+    def predict(self, df: DataFrame) -> np.ndarray:
+        return (
+            self.base_classifier.predict(df) * self.original_alpha / self.sampled_alpha
+        )
+
+    def _get_sampled_alpha(
+        self, df: DataFrame, dataset_type_col: str, label_col: str
+    ) -> float:
+        training_labels = super().get_training_rows(
+            df=df,
+            dataset_type_col=dataset_type_col,
+        )[label_col]
+        sampled_alpha = len(training_labels[training_labels == 1]) / len(
+            training_labels
+        )
+        return sampled_alpha

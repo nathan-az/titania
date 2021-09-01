@@ -13,4 +13,4 @@ def train_udf_factory(
         df.columns = column_names
         model = training_function(df, **kwargs)
         model.save(path=model_save_path)
-        return model.predict(df)
+        return pd.Series(model.predict(df))
