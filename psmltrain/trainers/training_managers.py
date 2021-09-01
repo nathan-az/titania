@@ -113,9 +113,11 @@ class SubsampledClassifier(BaseTrainingManager):
         return self
 
     def predict(self, df: DataFrame) -> np.ndarray:
-        return (
-            self.base_classifier.predict(df) * self.original_alpha / self.sampled_alpha
+        base_preds = self.base_classifier.predict(df)
+        beta = self._calculate_beta(
+            alpha_old=self.original_alpha, alpha_new=self.sampled_alpha
         )
+        return self._calibrate_probabilities(probs=base_preds, beta=beta)
 
     def _get_sampled_alpha(
         self, df: DataFrame, dataset_type_col: str, label_col: str
@@ -128,3 +130,13 @@ class SubsampledClassifier(BaseTrainingManager):
             training_labels
         )
         return sampled_alpha
+
+    @staticmethod
+    def _calculate_beta(alpha_old, alpha_new):
+        return (alpha_old / (1 - alpha_old)) / (alpha_new / (1 - alpha_new))
+
+    @staticmethod
+    def _calibrate_probabilities(probs, beta):
+        # See the below link for the calibration method and derivation
+        # https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf
+        return probs * beta / (probs * beta + 1 - probs)
