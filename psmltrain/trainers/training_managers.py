@@ -48,7 +48,7 @@ class LightGBMTrainingManager(BaseTrainingManager):
         use_early_stopping: bool,
     ):
         train = df.loc[df[dataset_type_col] == "training", :]
-        val = df.loc[~df[dataset_type_col] == "validation", :]
+        val = df.loc[~(df[dataset_type_col] == "validation"), :]
 
         feature_name = dataset_params.get("feature_name", None)
         self._confirm_valid_feature_name(feature_name)
@@ -98,7 +98,6 @@ class LightGBMTrainingManager(BaseTrainingManager):
 class SubsampledClassifier(BaseTrainingManager):
     base_classifier: BaseTrainingManager
     original_alpha: float
-    subsampled_alpha: float
 
     def __init__(
         self, base_classifier_class, original_alpha: float, **base_classifier_kwargs
