@@ -6,10 +6,10 @@ import pandas as pd
 from lightgbm import Booster
 from pandas import DataFrame
 
-from psmltrain.trainers.generic_managers import BaseTrainingManager
+from psmltrain.trainers.generic_managers import BaseModelManager
 
 
-class LightGBMTrainingManager(BaseTrainingManager):
+class LightGBMTrainingManager(BaseModelManager):
     """
     Training manager for a LightGBM booster. Particularly useful for maintaining a single pickle-able class
     registering results as well as parameters used during training.
