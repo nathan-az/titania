@@ -82,7 +82,7 @@ class LightGBMTrainingManager(BaseModelManager):
             )
 
 
-class LGBMClassifierManager(LGBMClassifier):
+class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
     """
     Training manager for a LightGBM booster. Particularly useful for maintaining a single pickle-able class
     registering results as well as parameters used during training.
@@ -98,9 +98,8 @@ class LGBMClassifierManager(LGBMClassifier):
         self,
         df: pd.DataFrame,
         label_col: str,
-        fit_params: Dict[str, Any],
         dataset_type_col: str,
-        use_early_stopping: bool,
+        fit_params: Dict[str, Any],
     ):
         """
         An API for the fit method of LightGBMs sklearn API. Handles the splitting of training/validation and
@@ -117,8 +116,6 @@ class LGBMClassifierManager(LGBMClassifier):
             Parameters to pass into `fit`, e.g. early_stopping_rounds
         dataset_type_col: str
             Column name identifying rows as training/validation/test
-        use_early_stopping: bool
-            Whether to use early stopping (triggers creation of validation sets)
 
         Returns
         -------
@@ -129,18 +126,18 @@ class LGBMClassifierManager(LGBMClassifier):
             raise KeyError(
                 "`feature_name` should be passed in via the `features` argument, not in the `dataset_params` dictionary",
             )
-        train = df.loc[df[dataset_type_col] == "training", :]
 
-        X_train = train[feature_name]
-        y_train = train[label_col]
-
-        if use_early_stopping:
-            val = df.loc[~(df[dataset_type_col] == "validation"), :]
-            X_val = val[feature_name]
-            y_val = val[label_col]
-            super().fit(X=X_train, y=y_train, eval_set=[(X_val, y_val)], **fit_params)
+        if fit_params.get("early_stopping_rounds", 0) > 0:
+            train = df.loc[df[dataset_type_col] == "training", :]
+            valid = df.loc[df[dataset_type_col] == "validation", :]
+            super(LGBMClassifier).fit(
+                X=train[feature_name],
+                y=train[label_col],
+                eval_set=[(valid[feature_name], valid[label_col])],
+                **fit_params,
+            )
             return self
 
         else:
-            super(LGBMClassifier).fit(X=X_train, y=y_train, **fit_params)
+            super(LGBMClassifier).fit(X=df[feature_name], y=df[label_col], **fit_params)
             return self
