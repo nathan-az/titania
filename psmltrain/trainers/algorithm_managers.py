@@ -130,7 +130,7 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
         if fit_params.get("early_stopping_rounds", 0) > 0:
             train = df.loc[df[dataset_type_col] == "training", :]
             valid = df.loc[df[dataset_type_col] == "validation", :]
-            super(LGBMClassifier).fit(
+            super().fit(
                 X=train[feature_name],
                 y=train[label_col],
                 eval_set=[(valid[feature_name], valid[label_col])],
@@ -139,5 +139,35 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
             return self
 
         else:
-            super(LGBMClassifier).fit(X=df[feature_name], y=df[label_col], **fit_params)
+            super().fit(X=df[feature_name], y=df[label_col], **fit_params)
             return self
+
+    def binary_predict_proba(
+        self,
+        X,
+        raw_score=False,
+        start_iteration=0,
+        num_iteration=None,
+        pred_leaf=False,
+        pred_contrib=False,
+        **kwargs,
+    ):
+        if self.n_classes_ > 2:
+            raise ValueError(
+                f"`binary_predict_proba not compatible with n_classes {self.n_classes_}"
+            )
+        if isinstance(X, pd.DataFrame):
+            X = X[self.feature_name_]
+        preds = self.predict_proba(
+            X=X,
+            raw_score=raw_score,
+            start_iteration=start_iteration,
+            num_iteration=num_iteration,
+            pred_leaf=pred_leaf,
+            pred_contrib=pred_contrib,
+            **kwargs,
+        )
+        if preds.shape[1] == 2:
+            return preds[:, 1]
+        else:
+            return preds

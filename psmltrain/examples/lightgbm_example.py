@@ -18,8 +18,8 @@ model_params = {
     "boosting_type": "gbdt",
     "objective": "binary",
     "max_depth": 10,
-    "num_leaves": 1024,
-    "num_boost_round": 250,
+    "num_leaves": 128,
+    "num_boost_round": 150,
     "learning_rate": 0.05,
     "feature_fraction": 0.9,
     "bagging_fraction": 0.8,
@@ -48,3 +48,11 @@ model.train(
     fit_params=dataset_params,
     dataset_type_col="dataset_type",
 )
+
+valid = data.loc[data["dataset_type"] == "validation"]
+preds = model.binary_predict_proba(valid)
+print(preds.shape)
+
+label_to_pred = zip(valid["label"], preds)
+for i in range(10):
+    print(next(label_to_pred))

@@ -35,7 +35,7 @@ class SubmodelSpec:
     original_alpha: Optional[float]
 
 
-class EnsembleTrainer(FlexibleModelManager):
+class EnsembleClassifier(FlexibleModelManager):
     model_init_kwargs: Dict
     original_alpha: float
     metadata_table: Optional[pd.DataFrame]
@@ -114,7 +114,9 @@ class EnsembleTrainer(FlexibleModelManager):
                     {
                         row_id_col: pdf[row_id_col],
                         **{
-                            f"{self.model_name}_model_{i + 1}": model.predict(pdf)
+                            f"{self.model_name}_model_{i + 1}": model.binary_predict_proba(
+                                pdf
+                            )
                             for i, model in enumerate(self.models)
                         },
                     }
