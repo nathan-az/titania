@@ -102,22 +102,42 @@ class LGBMClassifierManager(LGBMClassifier):
         dataset_type_col: str,
         use_early_stopping: bool,
     ):
-        train = df.loc[df[dataset_type_col] == "training", :]
-        val = df.loc[~(df[dataset_type_col] == "validation"), :]
+        """
+        An API for the fit method of LightGBMs sklearn API. Handles the splitting of training/validation and
+        isolation of the label column
 
+        Parameters
+        ----------
+        df: pd.DataFrame
+            DataFrame with training and optionally validation set. Requires column named in `dataset_type_col`
+            identifying at least "training" rows and optionally "validation" rows
+        label_col: str
+            Name of column containing binary label
+        fit_params: Dict[str, Any]
+            Parameters to pass into `fit`, e.g. early_stopping_rounds
+        dataset_type_col: str
+            Column name identifying rows as training/validation/test
+        use_early_stopping: bool
+            Whether to use early stopping (triggers creation of validation sets)
+
+        Returns
+        -------
+        Trained LGBMClassifierManager
+        """
         feature_name = fit_params.get("feature_name", None)
         if "feature_name" not in fit_params:
             raise KeyError(
                 "`feature_name` should be passed in via the `features` argument, not in the `dataset_params` dictionary",
             )
+        train = df.loc[df[dataset_type_col] == "training", :]
 
         X_train = train[feature_name]
         y_train = train[label_col]
 
-        X_val = val[feature_name]
-        y_val = val[label_col]
-
         if use_early_stopping:
+            val = df.loc[~(df[dataset_type_col] == "validation"), :]
+            X_val = val[feature_name]
+            y_val = val[label_col]
             super().fit(X=X_train, y=y_train, eval_set=[(X_val, y_val)], **fit_params)
             return self
 
