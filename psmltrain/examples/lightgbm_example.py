@@ -47,5 +47,4 @@ model.train(
     label_col="label",
     fit_params=dataset_params,
     dataset_type_col="dataset_type",
-    use_early_stopping=True,
 )

@@ -1,8 +1,9 @@
 # pylint: disable=arguments-differ
 
 import os
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Optional, Any, Type
+from typing import Dict, Optional, Any, Type, Union, List
 
 import joblib
 import numpy as np
@@ -23,6 +24,17 @@ from psmltrain.trainers.generic_managers import (
 )
 
 
+def _kwargs_all_type(type, **kwargs):
+    return all([isinstance(arg, type) for kw, arg in kwargs.items()])
+
+
+@dataclass
+class SubmodelSpec:
+    base_classifier_class: Type
+    model_init_kwargs: Dict[str, Any]
+    original_alpha: Optional[float]
+
+
 class EnsembleTrainer(FlexibleModelManager):
     model_init_kwargs: Dict
     original_alpha: float
@@ -31,20 +43,11 @@ class EnsembleTrainer(FlexibleModelManager):
 
     def __init__(
         self,
-        base_classifier_class: Type[BaseModelManager],
-        model_init_kwargs,
+        model_specs: Union[SubmodelSpec, List[SubmodelSpec]],
         model_name: str,
-        use_undersampled_classifier: bool,
-        original_alpha: Optional[float] = None,
     ):
-        self.base_classifier_class = base_classifier_class
-        self.model_init_kwargs = model_init_kwargs
-        self.original_alpha = original_alpha
+        self.model_specs = model_specs
         self.model_name = model_name
-        if use_undersampled_classifier:
-            self._valid_undersampling_alphas(original_alpha=original_alpha)
-            self.original_alpha = original_alpha
-            self.use_undersampled_classifier = use_undersampled_classifier
 
     def train_spark(
         self,
@@ -57,17 +60,21 @@ class EnsembleTrainer(FlexibleModelManager):
         training_dt = datetime.now().timestamp()
 
         def train_udf(pdf):
+            dataset_id = pdf.loc[0, group_id_col]
+
+            if isinstance(self.model_specs, list):
+                model_spec = self.model_specs[dataset_id]
+
+            else:
+                model_spec = self.model_specs
+
             clf = self._train_single_classifier(
                 df=pdf,
                 label_col=label_col,
-                base_classifier_class=self.base_classifier_class,
-                model_init_kwargs=self.model_init_kwargs,
+                model_spec=model_spec,
                 training_kwargs=training_kwargs,
-                use_undersampled_classifier=self.use_undersampled_classifier,
-                original_alpha=self.original_alpha,
             )
 
-            dataset_id = pdf.loc[0, group_id_col]
             suffixed_model_name = f"{self.model_name}_{dataset_id}"
             save_path = os.path.join(model_save_dir, suffixed_model_name)
 
@@ -98,7 +105,7 @@ class EnsembleTrainer(FlexibleModelManager):
 
         return self
 
-    def predict_spark(self, df: pd.DataFrame, row_id_col: str) -> pd.Series:
+    def predict_spark(self, df: pyspark.sql.DataFrame, row_id_col: str) -> pd.Series:
         probability_mean_col = f"{self.model_name}_probability_mean"
 
         def predict_func(iterator):
@@ -145,21 +152,17 @@ class EnsembleTrainer(FlexibleModelManager):
     def _train_single_classifier(
         df: pd.DataFrame,
         label_col: str,
-        base_classifier_class: Type[BaseModelManager],
-        model_init_kwargs: Dict[str, Any],
+        model_spec: SubmodelSpec,
         training_kwargs: Dict[str, Any],
-        use_undersampled_classifier: bool,
-        original_alpha: Optional[float] = None,
     ):
-        if use_undersampled_classifier:
-            EnsembleTrainer._valid_undersampling_alphas(original_alpha=original_alpha)
+        if model_spec.original_alpha:
             clf = UndersampledClassifier(
-                base_classifier_class=base_classifier_class,
-                original_alpha=original_alpha,
-                **model_init_kwargs,
+                base_classifier_class=model_spec.base_classifier_class,
+                original_alpha=model_spec.original_alpha,
+                **model_spec.model_init_kwargs,
             )
         else:
-            clf = base_classifier_class(**model_init_kwargs)
+            clf = model_spec.base_classifier_class(**model_spec.model_init_kwargs)
 
         clf = clf.train(df=df, label_col=label_col, **training_kwargs)
         return clf
@@ -168,3 +171,16 @@ class EnsembleTrainer(FlexibleModelManager):
     def _valid_undersampling_alphas(original_alpha: float):
         if not original_alpha:
             raise ValueError(f"`original_alpha` must be set, got {original_alpha=}.")
+
+    @staticmethod
+    def _valid_init_arg_types(**kwargs):
+        if not _kwargs_all_type(list, **kwargs) or _kwargs_all_type(dict, **kwargs):
+            arg_types = "\n".join(
+                [
+                    f"keyword: {kw}, type: {type(arg)}, arg: {arg}"
+                    for kw, arg in kwargs.items()
+                ]
+            )
+            raise ValueError(
+                f"Args {[kw for kw, args in kwargs.items()]} must all be list or dict. Got:\n{arg_types}"
+            )

@@ -80,7 +80,7 @@ class FlexibleModelManager(ABC):
 
     @abstractmethod
     def predict_spark(
-        self, df: pyspark.sql.DataFrame, row_id_col: str, **kwargs
+        self, df: pyspark.sql.DataFrame, row_id_col: str
     ) -> pyspark.sql.DataFrame:
         raise NotImplementedError
 
