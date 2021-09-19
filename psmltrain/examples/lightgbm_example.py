@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.datasets import make_classification
 
 from psmltrain.trainers.training_functions import lightgbm_training_function
-from psmltrain.trainers.training_managers import LightGBMTrainingManager
+from psmltrain.trainers.algorithm_managers import LightGBMTrainingManager
 
 
 # generate training data

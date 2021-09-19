@@ -1,4 +1,4 @@
-from psmltrain.trainers.training_managers import LightGBMTrainingManager
+from psmltrain.trainers.algorithm_managers import LightGBMTrainingManager
 
 
 def lightgbm_training_function(
