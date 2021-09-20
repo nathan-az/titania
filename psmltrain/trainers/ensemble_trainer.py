@@ -32,8 +32,8 @@ class ModelSpec:
 
 
 class EnsembleClassifier(FlexibleModelManager):
-    model_init_kwargs: Dict
-    original_alpha: float
+    model_specs: Union[ModelSpec, List[ModelSpec]]
+    model_name: str
     metadata_table: Optional[pd.DataFrame]
     models: Any
 

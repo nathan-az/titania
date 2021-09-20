@@ -2,29 +2,32 @@ import numpy as np
 import pandas as pd
 
 
-def _calculate_beta(alpha_old, alpha_new):
+def _calculate_beta(alpha_old: float, alpha_new: float):
     # This follows from the fact that the beta (probability of selecting a negative instance while
     # undersampling) is calculated through (num_pos / (desired pos/neg ratio)) / num_neg
     return (alpha_old / (1 - alpha_old)) / (alpha_new / (1 - alpha_new))
 
 
-def _calibrate_probabilities(probs, beta):
+def _calibrate_probabilities(probs, beta: float):
     # See the below link for the calibration method and derivation
     # https://www3.nd.edu/~dial/publications/dalpozzolo2015calibrating.pdf
     return probs * beta / (probs * beta + 1 - probs)
 
 
 def _undersampled_class_factory(base_class):
-    """Allows bolting on of undersampling calibration, to any compatible parent class, so that
+    """
+    Allows bolting on of undersampling calibration, to any compatible parent class, so that
     the underlying model's API is immediately accessible. For general pattern, see:
     https://stackoverflow.com/questions/15247075/how-can-i-dynamically-create-derived-classes-from-a-base-class
     """
 
-    def __init__(self, original_alpha, **model_init_kwargs):
+    def __init__(self, original_alpha: float, **model_init_kwargs):
         self.original_alpha = original_alpha
         base_class.__init__(self, **model_init_kwargs)
 
-    def set_sampled_alpha(self, df, label_col, dataset_type_col):
+    def set_sampled_alpha(
+        self, df: pd.DataFrame, label_col: str, dataset_type_col: str
+    ):
         if dataset_type_col:
             df = df[df[dataset_type_col] == "training"]
 

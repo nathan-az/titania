@@ -90,12 +90,6 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
     a standard sklearn model.
     """
 
-    model_params: Dict[str, Union[str, int, float]]
-    eval_results: Dict[str, Dict]
-    model: Booster
-    dataset_params: Dict[str, Union[str, int, float]]
-    eval_results: Dict
-
     def train(
         self,
         df: pd.DataFrame,
@@ -139,11 +133,10 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
                 eval_set=[(valid[feature_name], valid[label_col])],
                 **fit_params,
             )
-            return self
-
         else:
             self.fit(X=df[feature_name], y=df[label_col], **fit_params)
-            return self
+
+        return self
 
     def binary_predict_proba(
         self,
@@ -157,10 +150,11 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
     ):
         if self.n_classes_ > 2:
             raise ValueError(
-                f"`binary_predict_proba not compatible with n_classes {self.n_classes_}"
+                f"`binary_predict_proba` not compatible with n_classes {self.n_classes_}"
             )
         if isinstance(X, pd.DataFrame):
             X = X[self.feature_name_]
+
         preds = self.predict_proba(
             X=X,
             raw_score=raw_score,
