@@ -44,11 +44,11 @@ class EnsembleClassifier(FlexibleModelManager):
     ):
         if isinstance(model_specs, list):
             self.model_specs = [
-                self._update_submodel_spec_for_undersampling(spec=spec)
+                self._update_model_spec_for_undersampling(spec=spec)
                 for spec in model_specs
             ]
         else:
-            self.model_specs = self._update_submodel_spec_for_undersampling(
+            self.model_specs = self._update_model_spec_for_undersampling(
                 spec=model_specs
             )
 
@@ -158,9 +158,9 @@ class EnsembleClassifier(FlexibleModelManager):
         raise NotImplementedError
 
     @staticmethod
-    def _update_submodel_spec_for_undersampling(spec: ModelSpec):
+    def _update_model_spec_for_undersampling(spec: ModelSpec):
         if spec.original_alpha:
-            spec.model_init_kwargs["original_alpha"].update("original_alpha")
+            spec.model_init_kwargs["original_alpha"] = spec.original_alpha
             undersampled_class = _undersampled_class_factory(spec.base_classifier_class)
             spec.base_classifier_class = undersampled_class
         return spec
