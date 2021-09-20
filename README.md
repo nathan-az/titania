@@ -18,7 +18,7 @@ Training data for all models to be trained. If you plan to train k models (e.g. 
 * The DataFrame should contain a `dataset_id` column, ranging from 0 to k-1, indicating which model each row belongs to
 * The DataFrame should contain all features and the label column
 
-### Manager class (example: [LGBMClassifierManager](https://github.com/nathan-az/titania/blob/1690fcc74287f8862893dd5fe1b1fdc98f6852ed/titania/trainers/algorithm_managers.py#L87) for an example)
+### Manager Class (example: [LGBMClassifierManager](https://github.com/nathan-az/titania/blob/1690fcc74287f8862893dd5fe1b1fdc98f6852ed/titania/trainers/algorithm_managers.py#L87))
 A "training manager" is a class created to conform to Titania's requirements in parallelisation. In short:
 * A `train` function must be available
   * Its signature must conforming to `(df, label_col, **training_kwargs)`. `training_kwargs` should include any training-time arguments for your particular algorithm. 
@@ -37,7 +37,7 @@ The EnsembledClassifier has a simple API, taking only two arguments during initi
 * model_specs: either a single model specification to be used to instantiate all models, or a list of model specs, where `len(model_specs) == num_datasets`
 * model_name: the name of the ensemble to be trained. This is used to identify temporarily saved pickled models from each UDF to then reload into the EnsembledClassifier afterwards, as well as in prediction columns.
 
-## TO-DO
+## To-do
 ### High Priority
 * Multiple training-time arguments - intention is to add support for passing of different training-time arguments. This will likely be added as an additional attribute in ModelSpec.
 
