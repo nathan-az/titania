@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Dict, Optional, Any, Type, Union, List
 
 import joblib
-import numpy as np
 import pandas as pd
 from pyspark.sql.types import StructType, StructField, DoubleType
 import pyspark
@@ -17,19 +16,16 @@ from psmltrain.trainers.definitions import (
     SAVE_PATH_COLUMN_NAME,
     TRAINING_GROUPED_MAP_OUTPUT_SCHEMA,
 )
-from psmltrain.trainers.generic_managers import (
-    FlexibleModelManager,
-    BaseModelManager,
-    UndersampledClassifier,
-)
+from psmltrain.trainers.generic_managers import FlexibleModelManager
+from psmltrain.trainers.undersampled_classifier import _undersampled_class_factory
 
 
-def _kwargs_all_type(type, **kwargs):
-    return all([isinstance(arg, type) for kw, arg in kwargs.items()])
+def _kwargs_all_type(type_, **kwargs):
+    return all([isinstance(arg, type_) for kw, arg in kwargs.items()])
 
 
 @dataclass
-class SubmodelSpec:
+class ModelSpec:
     base_classifier_class: Type
     model_init_kwargs: Dict[str, Any]
     original_alpha: Optional[float]
@@ -43,10 +39,19 @@ class EnsembleClassifier(FlexibleModelManager):
 
     def __init__(
         self,
-        model_specs: Union[SubmodelSpec, List[SubmodelSpec]],
+        model_specs: Union[ModelSpec, List[ModelSpec]],
         model_name: str,
     ):
-        self.model_specs = model_specs
+        if isinstance(model_specs, list):
+            self.model_specs = [
+                self._update_submodel_spec_for_undersampling(spec=spec)
+                for spec in model_specs
+            ]
+        else:
+            self.model_specs = self._update_submodel_spec_for_undersampling(
+                spec=model_specs
+            )
+
         self.model_name = model_name
 
     def train_spark(
@@ -110,6 +115,8 @@ class EnsembleClassifier(FlexibleModelManager):
 
         def predict_func(iterator):
             for pdf in iterator:
+                # TODO: make this compatible with multi-class classification
+                #  (outputting num_classes * num_submodels cols)
                 predictions = pd.DataFrame(
                     {
                         row_id_col: pdf[row_id_col],
@@ -151,38 +158,20 @@ class EnsembleClassifier(FlexibleModelManager):
         raise NotImplementedError
 
     @staticmethod
+    def _update_submodel_spec_for_undersampling(spec: ModelSpec):
+        if spec.original_alpha:
+            spec.model_init_kwargs["original_alpha"].update("original_alpha")
+            undersampled_class = _undersampled_class_factory(spec.base_classifier_class)
+            spec.base_classifier_class = undersampled_class
+        return spec
+
+    @staticmethod
     def _train_single_classifier(
         df: pd.DataFrame,
         label_col: str,
-        model_spec: SubmodelSpec,
+        model_spec: ModelSpec,
         training_kwargs: Dict[str, Any],
     ):
-        if model_spec.original_alpha:
-            clf = UndersampledClassifier(
-                base_classifier_class=model_spec.base_classifier_class,
-                original_alpha=model_spec.original_alpha,
-                **model_spec.model_init_kwargs,
-            )
-        else:
-            clf = model_spec.base_classifier_class(**model_spec.model_init_kwargs)
-
+        clf = model_spec.base_classifier_class(**model_spec.model_init_kwargs)
         clf = clf.train(df=df, label_col=label_col, **training_kwargs)
         return clf
-
-    @staticmethod
-    def _valid_undersampling_alphas(original_alpha: float):
-        if not original_alpha:
-            raise ValueError(f"`original_alpha` must be set, got {original_alpha=}.")
-
-    @staticmethod
-    def _valid_init_arg_types(**kwargs):
-        if not _kwargs_all_type(list, **kwargs) or _kwargs_all_type(dict, **kwargs):
-            arg_types = "\n".join(
-                [
-                    f"keyword: {kw}, type: {type(arg)}, arg: {arg}"
-                    for kw, arg in kwargs.items()
-                ]
-            )
-            raise ValueError(
-                f"Args {[kw for kw, args in kwargs.items()]} must all be list or dict. Got:\n{arg_types}"
-            )

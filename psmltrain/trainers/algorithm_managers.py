@@ -48,7 +48,8 @@ class LightGBMTrainingManager(BaseModelManager):
 
         if "feature_name" not in dataset_params:
             raise KeyError(
-                "`feature_name` should be passed in via the `features` argument, not in the `dataset_params` dictionary",
+                "`feature_name` should be passed in via the `features` argument, not in the \
+                `dataset_params` dictionary",
             )
 
         train_set = lgb.Dataset(X_train, label=y_train, **dataset_params)
@@ -69,7 +70,8 @@ class LightGBMTrainingManager(BaseModelManager):
     def predict(self, df: DataFrame) -> np.ndarray:
         return self.model.predict(df)
 
-    def _confirm_valid_feature_name(self, feature_name: Any):
+    @staticmethod
+    def _confirm_valid_feature_name(feature_name: Any):
         if feature_name is None:
             raise KeyError(
                 f"`feature_name` must be a list of strings containing feature names to use during training. \
@@ -124,13 +126,14 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
         feature_name = fit_params.get("feature_name", None)
         if "feature_name" not in fit_params:
             raise KeyError(
-                "`feature_name` should be passed in via the `features` argument, not in the `dataset_params` dictionary",
+                "`feature_name` should be passed in via the `features` argument, not in \
+                the `dataset_params` dictionary",
             )
 
         if fit_params.get("early_stopping_rounds", 0) > 0:
             train = df.loc[df[dataset_type_col] == "training", :]
             valid = df.loc[df[dataset_type_col] == "validation", :]
-            super().fit(
+            self.fit(
                 X=train[feature_name],
                 y=train[label_col],
                 eval_set=[(valid[feature_name], valid[label_col])],
@@ -139,7 +142,7 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
             return self
 
         else:
-            super().fit(X=df[feature_name], y=df[label_col], **fit_params)
+            self.fit(X=df[feature_name], y=df[label_col], **fit_params)
             return self
 
     def binary_predict_proba(
