@@ -115,8 +115,8 @@ class EnsembleClassifier(FlexibleModelManager):
 
         def predict_func(iterator):
             for pdf in iterator:
-                # TODO: make this compatible with multi-class classification
-                #  (outputting num_classes * num_submodels cols)
+                # TODO: make this compatible with multi-class classification,
+                #  column for each (class, submodel) pair
                 predictions = pd.DataFrame(
                     {
                         row_id_col: pdf[row_id_col],
