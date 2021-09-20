@@ -1,4 +1,4 @@
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Optional
 
 import lightgbm as lgb
 import numpy as np
@@ -94,8 +94,8 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
         self,
         df: pd.DataFrame,
         label_col: str,
-        dataset_type_col: str,
         fit_params: Dict[str, Any],
+        dataset_type_col: Optional[str] = None,
     ):
         """
         An API for the fit method of LightGBMs sklearn API. Handles the splitting of training/validation and
@@ -124,7 +124,15 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
                 the `dataset_params` dictionary",
             )
 
-        if fit_params.get("early_stopping_rounds", 0) > 0:
+        early_stopping_rounds = fit_params.get("early_stopping_rounds", 0)
+        if early_stopping_rounds > 0:
+
+            if not dataset_type_col:
+                raise ValueError(f"`early_stopping_rounds` set to {early_stopping_rounds} but \
+                `dataset_type_col` is {dataset_type_col}. If {early_stopping_rounds} is set, a \
+                 valid {dataset_type_col} must be set, with values containing at least 'training' \
+                 and 'validation'.")
+
             train = df.loc[df[dataset_type_col] == "training", :]
             valid = df.loc[df[dataset_type_col] == "validation", :]
             self.fit(
@@ -152,6 +160,8 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
             raise ValueError(
                 f"`binary_predict_proba` not compatible with n_classes {self.n_classes_}"
             )
+        # Supports the case that a DataFrame with excess columns is passed in,
+        # otherwise assumes an np.ndarray with same column ordering as training time
         if isinstance(X, pd.DataFrame):
             X = X[self.feature_name_]
 
