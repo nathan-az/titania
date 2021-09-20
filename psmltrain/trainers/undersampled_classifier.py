@@ -15,8 +15,8 @@ def _calibrate_probabilities(probs, beta):
 
 
 def _undersampled_class_factory(base_class):
-    """Allows bolting on of undersampling calibration if needed, in addition to any Super class, so that
-    the underlying model's API is immediately accessible. See:
+    """Allows bolting on of undersampling calibration, to any compatible parent class, so that
+    the underlying model's API is immediately accessible. For general pattern, see:
     https://stackoverflow.com/questions/15247075/how-can-i-dynamically-create-derived-classes-from-a-base-class
     """
 
