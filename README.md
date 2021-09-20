@@ -25,7 +25,7 @@ A "training manager" is a class created to conform to Titania's requirements in 
   * Its signature must conforming to `(df, label_col, **training_kwargs)`. `training_kwargs` should include any training-time arguments for your particular algorithm. 
   * The function itself should conduct the training and include any overhead activities. 
 * A `binary_predict_proba` function is available
-  * This function should output a one-dimensional array containing the predicted probability of a `success` of your given label. This requirement may be removed in the future if multi-class classification problems are supported (including probability calibration in the undersampling case). 
+  * This function should output a one-dimensional array containing the predicted probability of a `success` of your given label. This requirement will be removed with the future support of multi-class classification. 
 
 ### ModelSpec
 The ModelSpec is a simple dataclass used to provide the initialisation specifications for a model. It should contain:
