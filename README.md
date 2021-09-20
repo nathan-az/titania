@@ -3,6 +3,7 @@ Titania provides a framework for distributed training of Python models, leveragi
 * Better parallelisation during hyperparameter optimisation
 * Faster training of ensemble models
 * Faster feature set tests
+* Parallel training of independent models predicting in the same pipeline (e.g. propensity -> value models)
 
 For very unbalanced binary classification problems, Titania supports training using re-balanced datasets. At prediction-time, probability calibration as described in [1] is performed to ensure conformity of the score distribution with that of the original unbalanced dataset. This functionality is not currently available for multi-class classification.
 
