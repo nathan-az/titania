@@ -6,7 +6,7 @@ import pandas as pd
 from lightgbm import Booster, LGBMClassifier
 from pandas import DataFrame
 
-from psmltrain.trainers.generic_managers import BaseModelManager
+from titania.trainers.generic_managers import BaseModelManager
 
 
 class LightGBMTrainingManager(BaseModelManager):

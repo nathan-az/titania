@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.datasets import make_classification
 
-from psmltrain.trainers.algorithm_managers import LGBMClassifierManager
+from titania.trainers.algorithm_managers import LGBMClassifierManager
 
 # generate training data
 dataset = make_classification(n_samples=100_000, n_features=100, n_informative=40)

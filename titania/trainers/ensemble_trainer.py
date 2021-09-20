@@ -10,14 +10,14 @@ import pandas as pd
 from pyspark.sql.types import StructType, StructField, DoubleType
 import pyspark
 
-from psmltrain.trainers.definitions import (
+from titania.trainers.definitions import (
     TRAIN_DATETIME_COLUMN_NAME,
     TRAINING_ROW_COUNT_COLUMN_NAME,
     SAVE_PATH_COLUMN_NAME,
     TRAINING_GROUPED_MAP_OUTPUT_SCHEMA,
 )
-from psmltrain.trainers.generic_managers import FlexibleModelManager
-from psmltrain.trainers.undersampled_classifier import _undersampled_class_factory
+from titania.trainers.generic_managers import FlexibleModelManager
+from titania.trainers.undersampled_classifier import _undersampled_class_factory
 
 
 def _kwargs_all_type(type_, **kwargs):
