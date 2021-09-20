@@ -44,6 +44,7 @@ The EnsembledClassifier has a simple API, taking only two arguments during initi
 
 ### Medium Priority
 * Multi-class classification - remove all dependencies limiting functionality to binary classification problems.
+* Setup for pypi for easy install - will be done once code is tested and usage pattern is more stable
 
 ### Low Priority
 * Implement more training managers for common libraries (e.g. XGBoost, sklearn RandomForestClassifier, etc.).
