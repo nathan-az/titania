@@ -18,7 +18,7 @@ Training data for all models to be trained. If you plan to train k models (e.g. 
 * The DataFrame should contain a `dataset_id` column, ranging from 0 to k-1, indicating which model each row belongs to
 * The DataFrame should contain all features and the label column
 
-### Training manager setup (see LGBMClassifierManager in [algorithm_managers.py](https://github.com/nathan-az/titania/blob/1690fcc74287f8862893dd5fe1b1fdc98f6852ed/titania/trainers/algorithm_managers.py#L87) for an example)
+### Manager class (example: [LGBMClassifierManager](https://github.com/nathan-az/titania/blob/1690fcc74287f8862893dd5fe1b1fdc98f6852ed/titania/trainers/algorithm_managers.py#L87) for an example)
 A "training manager" is a class created to conform to Titania's requirements in parallelisation. In short:
 * A `train` function must be available
   * Its signature must conforming to `(df, label_col, **training_kwargs)`. `training_kwargs` should include any training-time arguments for your particular algorithm. 
