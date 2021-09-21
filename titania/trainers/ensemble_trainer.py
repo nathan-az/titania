@@ -28,7 +28,8 @@ def _kwargs_all_type(type_, **kwargs):
 class ModelSpec:
     base_classifier_class: Type
     model_init_kwargs: Dict[str, Any]
-    original_alpha: Optional[float]
+    training_kwargs: Dict[str, Any]
+    additional_options: Dict[str, float]
 
 
 class EnsembleClassifier(FlexibleModelManager):
@@ -60,7 +61,6 @@ class EnsembleClassifier(FlexibleModelManager):
         label_col: str,
         model_save_dir: str,
         group_id_col: str,
-        training_kwargs: Dict[str, Any],
     ):
         training_dt = datetime.now().timestamp()
 
@@ -77,7 +77,6 @@ class EnsembleClassifier(FlexibleModelManager):
                 df=pdf,
                 label_col=label_col,
                 model_spec=model_spec,
-                training_kwargs=training_kwargs,
             )
 
             suffixed_model_name = f"{self.model_name}_{dataset_id}"
@@ -159,8 +158,8 @@ class EnsembleClassifier(FlexibleModelManager):
 
     @staticmethod
     def _update_model_spec_for_undersampling(spec: ModelSpec):
-        if spec.original_alpha:
-            spec.model_init_kwargs["original_alpha"] = spec.original_alpha
+        if "original_alpha" in spec.additional_options:
+            spec.model_init_kwargs["original_alpha"] = spec.additional_options["original_alpha"]
             undersampled_class = _undersampled_class_factory(spec.base_classifier_class)
             spec.base_classifier_class = undersampled_class
         return spec
@@ -170,8 +169,7 @@ class EnsembleClassifier(FlexibleModelManager):
         df: pd.DataFrame,
         label_col: str,
         model_spec: ModelSpec,
-        training_kwargs: Dict[str, Any],
     ):
         clf = model_spec.base_classifier_class(**model_spec.model_init_kwargs)
-        clf = clf.train(df=df, label_col=label_col, **training_kwargs)
+        clf = clf.train(df=df, label_col=label_col, **model_spec.training_kwargs)
         return clf
