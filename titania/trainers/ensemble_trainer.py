@@ -27,9 +27,9 @@ def _kwargs_all_type(type_, **kwargs):
 @dataclass
 class ModelSpec:
     base_classifier_class: Type
-    model_init_kwargs: Dict[str, Any]
-    training_kwargs: Dict[str, Any]
-    additional_options: Dict[str, float]
+    model_init_kwargs: Optional[Dict[str, Any]] = None
+    training_kwargs: Optional[Dict[str, Any]] = None
+    additional_options: Optional[Dict[str, float]] = None
 
 
 class EnsembleClassifier(FlexibleModelManager):
