@@ -19,11 +19,9 @@ def _undersampled_class_factory(base_class):
     Allows bolting on of undersampling calibration, to any compatible parent class, so that
     the underlying model's API is immediately accessible. For general pattern, see:
     https://stackoverflow.com/questions/15247075/how-can-i-dynamically-create-derived-classes-from-a-base-class
-    """
 
-    def __init__(self, original_alpha: float, **model_init_kwargs):
-        self.original_alpha = original_alpha
-        base_class.__init__(self, **model_init_kwargs)
+    Note that overriding __init__ was removed since the **kwargs then fails sklearn signature introspection
+    """
 
     def set_sampled_alpha(
         self, df: pd.DataFrame, label_col: str, dataset_type_col: str
@@ -44,6 +42,15 @@ def _undersampled_class_factory(base_class):
         return self
 
     def binary_predict_proba(self, df: pd.DataFrame) -> np.ndarray:
+        if not hasattr(self, "original_alpha") or (
+            getattr(self, "original_alpha") is None
+        ):
+            raise ValueError(
+                f"`original_alpha` must be set as an attribute for class {self.__name__}. \
+            Set it as a kwarg during instantiation or as an attribute after instantiation."
+            )
+
+
         base_preds = base_class.binary_predict_proba(self, df)
         beta = _calculate_beta(self.original_alpha, self.sampled_alpha)
         return _calibrate_probabilities(probs=base_preds, beta=beta)
@@ -52,7 +59,6 @@ def _undersampled_class_factory(base_class):
         f"Undersampled{base_class.__name__}",
         (base_class,),
         dict(
-            __init__=__init__,
             set_sampled_alpha=set_sampled_alpha,
             train=train,
             binary_predict_proba=binary_predict_proba,

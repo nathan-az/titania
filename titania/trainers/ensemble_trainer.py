@@ -1,7 +1,7 @@
 # pylint: disable=arguments-differ
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Optional, Any, Type, Union, List
 
@@ -27,9 +27,9 @@ def _kwargs_all_type(type_, **kwargs):
 @dataclass
 class ModelSpec:
     base_classifier_class: Type
-    model_init_kwargs: Optional[Dict[str, Any]] = None
-    training_kwargs: Optional[Dict[str, Any]] = None
-    additional_options: Optional[Dict[str, float]] = None
+    model_init_kwargs: Optional[Dict[str, Any]] = field(default_factory=dict)
+    training_kwargs: Optional[Dict[str, Any]] = field(default_factory=dict)
+    additional_options: Optional[Dict[str, Any]] = field(default_factory=dict)
 
 
 class EnsembleClassifier(FlexibleModelManager):
@@ -159,7 +159,9 @@ class EnsembleClassifier(FlexibleModelManager):
     @staticmethod
     def _update_model_spec_for_undersampling(spec: ModelSpec):
         if "original_alpha" in spec.additional_options:
-            spec.model_init_kwargs["original_alpha"] = spec.additional_options["original_alpha"]
+            spec.model_init_kwargs["original_alpha"] = spec.additional_options[
+                "original_alpha"
+            ]
             undersampled_class = _undersampled_class_factory(spec.base_classifier_class)
             spec.base_classifier_class = undersampled_class
         return spec

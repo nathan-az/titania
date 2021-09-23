@@ -128,10 +128,12 @@ class LGBMClassifierManager(LGBMClassifier, BaseModelManager):
         if early_stopping_rounds > 0:
 
             if not dataset_type_col:
-                raise ValueError(f"`early_stopping_rounds` set to {early_stopping_rounds} but \
+                raise ValueError(
+                    f"`early_stopping_rounds` set to {early_stopping_rounds} but \
                 `dataset_type_col` is {dataset_type_col}. If {early_stopping_rounds} is set, a \
                  valid {dataset_type_col} must be set, with values containing at least 'training' \
-                 and 'validation'.")
+                 and 'validation'."
+                )
 
             train = df.loc[df[dataset_type_col] == "training", :]
             valid = df.loc[df[dataset_type_col] == "validation", :]

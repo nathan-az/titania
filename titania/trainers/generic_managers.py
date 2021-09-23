@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-import joblib
+import cloudpickle
 import pandas as pd
 import pyspark
 
@@ -19,7 +19,8 @@ class BaseModelManager(ABC):
         raise NotImplementedError
 
     def save(self, path: str):
-        joblib.dump(self, path)
+        with open(path, "wb") as file:
+            cloudpickle.dump(self, file)
 
 
 class FlexibleModelManager(ABC):
@@ -52,3 +53,7 @@ class FlexibleModelManager(ABC):
             self.predict_spark(df, **kwargs)
         else:
             self.predict_local(df, **kwargs)
+
+    def save(self, path: str):
+        with open(path, "wb") as file:
+            cloudpickle.dump(self, file)
